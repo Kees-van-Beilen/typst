@@ -208,6 +208,8 @@ pub enum Color {
     Hsl(Hsl),
     /// A 32-bit HSV color.
     Hsv(Hsv),
+    /// The final color isn't picked at compile time
+    Meta
 }
 
 #[scope]
@@ -215,6 +217,7 @@ impl Color {
     /// The module of preset color maps.
     pub const MAP: fn() -> Module = || typst_utils::singleton!(Module, map()).clone();
 
+    pub const META: Self = Self::Meta;
     pub const BLACK: Self = Self::Luma(Luma::new(0.0, 1.0));
     pub const GRAY: Self = Self::Luma(Luma::new(0.6666666, 1.0));
     pub const WHITE: Self = Self::Luma(Luma::new(1.0, 1.0));
@@ -790,6 +793,9 @@ impl Color {
                     Ratio::new(c.alpha.into()),
                 ]
             }
+            Self::Meta => {
+                array![]
+            }
         };
         // Remove the alpha component if the corresponding argument was set.
         if !alpha && !matches!(self, Self::Cmyk(_)) {
@@ -825,6 +831,7 @@ impl Color {
             Self::Cmyk(_) => ColorSpace::Cmyk,
             Self::Hsl(_) => ColorSpace::Hsl,
             Self::Hsv(_) => ColorSpace::Hsv,
+            Self::Meta => ColorSpace::LinearRgb //TODO:replace
         }
     }
 
@@ -858,6 +865,7 @@ impl Color {
             Self::Cmyk(c) => Self::Cmyk(c.lighten(factor)),
             Self::Hsl(c) => Self::Hsl(c.lighten(factor)),
             Self::Hsv(c) => Self::Hsv(c.lighten(factor)),
+            Self::Meta => Self::Meta
         }
     }
 
@@ -878,6 +886,7 @@ impl Color {
             Self::Cmyk(c) => Self::Cmyk(c.darken(factor)),
             Self::Hsl(c) => Self::Hsl(c.darken(factor)),
             Self::Hsv(c) => Self::Hsv(c.darken(factor)),
+            Self::Meta => Self::Meta
         }
     }
 
@@ -904,6 +913,17 @@ impl Color {
             | Self::Cmyk(_) => {
                 Color::Hsv(self.to_hsv().saturate(f)).to_space(self.space())
             }
+<<<<<<< Updated upstream
+=======
+            Self::Oklab(_) => self.to_hsv().saturate(span, factor)?.to_oklab(),
+            Self::Oklch(_) => self.to_hsv().saturate(span, factor)?.to_oklch(),
+            Self::LinearRgb(_) => self.to_hsv().saturate(span, factor)?.to_linear_rgb(),
+            Self::Rgb(_) => self.to_hsv().saturate(span, factor)?.to_rgb(),
+            Self::Cmyk(_) => self.to_hsv().saturate(span, factor)?.to_cmyk(),
+            Self::Hsl(c) => Self::Hsl(c.saturate(factor.get() as f32)),
+            Self::Hsv(c) => Self::Hsv(c.saturate(factor.get() as f32)),
+            Self::Meta => Self::Meta
+>>>>>>> Stashed changes
         })
     }
 
@@ -930,6 +950,17 @@ impl Color {
             | Self::Cmyk(_) => {
                 Color::Hsv(self.to_hsv().desaturate(f)).to_space(self.space())
             }
+<<<<<<< Updated upstream
+=======
+            Self::Oklab(_) => self.to_hsv().desaturate(span, factor)?.to_oklab(),
+            Self::Oklch(_) => self.to_hsv().desaturate(span, factor)?.to_oklch(),
+            Self::LinearRgb(_) => self.to_hsv().desaturate(span, factor)?.to_linear_rgb(),
+            Self::Rgb(_) => self.to_hsv().desaturate(span, factor)?.to_rgb(),
+            Self::Cmyk(_) => self.to_hsv().desaturate(span, factor)?.to_cmyk(),
+            Self::Hsl(c) => Self::Hsl(c.desaturate(factor.get() as f32)),
+            Self::Hsv(c) => Self::Hsv(c.desaturate(factor.get() as f32)),
+            Self::Meta => Self::Meta
+>>>>>>> Stashed changes
         })
     }
 
@@ -980,6 +1011,7 @@ impl Color {
                 c.value,
                 c.alpha,
             )),
+            Self::Meta => Self::Meta
         };
         result.to_space(self.space())
     }
@@ -1206,6 +1238,7 @@ impl Color {
             Color::LinearRgb(c) => Some(c.alpha),
             Color::Hsl(c) => Some(c.alpha),
             Color::Hsv(c) => Some(c.alpha),
+            Color::Meta => None,
         }
     }
 
@@ -1220,6 +1253,7 @@ impl Color {
             Color::LinearRgb(c) => c.alpha = alpha,
             Color::Hsl(c) => c.alpha = alpha,
             Color::Hsv(c) => c.alpha = alpha,
+            Color::Meta => {},
         }
 
         self
@@ -1247,6 +1281,7 @@ impl Color {
             Color::Cmyk(_) => bail!("CMYK does not have an alpha component"),
             Color::Hsl(c) => Color::Hsl(transform(c, scale)),
             Color::Hsv(c) => Color::Hsv(transform(c, scale)),
+            Color::Meta => bail!("Meta does not have an alpha component"),
         })
     }
 
@@ -1269,6 +1304,9 @@ impl Color {
             ],
             Color::Hsv(c) => {
                 [c.hue.into_degrees().rem_euclid(360.0), c.saturation, c.value, c.alpha]
+            }
+            Color::Meta => {
+                [0.0,0.0,0.0,1.0]
             }
         }
     }
@@ -1301,7 +1339,12 @@ impl Color {
             Self::Cmyk(c) => Luma::from_color(c.to_rgba()),
             Self::Hsl(c) => Luma::from_color(c),
             Self::Hsv(c) => Luma::from_color(c),
+<<<<<<< Updated upstream
         }
+=======
+            Self::Meta => Luma::new(0.0, 1.0),//TODO: should fail?
+        })
+>>>>>>> Stashed changes
     }
 
     pub fn to_oklab(self) -> Oklab {
@@ -1314,7 +1357,12 @@ impl Color {
             Self::Cmyk(c) => Oklab::from_color(c.to_rgba()),
             Self::Hsl(c) => Oklab::from_color(c),
             Self::Hsv(c) => Oklab::from_color(c),
+<<<<<<< Updated upstream
         }
+=======
+            Self::Meta => Oklab::from_color(Luma::new(0.0, 1.0)),//TODO: should fail?
+        })
+>>>>>>> Stashed changes
     }
 
     pub fn to_oklch(self) -> Oklch {
@@ -1327,7 +1375,12 @@ impl Color {
             Self::Cmyk(c) => Oklch::from_color(c.to_rgba()),
             Self::Hsl(c) => Oklch::from_color(c),
             Self::Hsv(c) => Oklch::from_color(c),
+<<<<<<< Updated upstream
         }
+=======
+            Self::Meta => Oklch::from_color(Luma::new(0.0, 1.0)),//TODO: should fail?
+        })
+>>>>>>> Stashed changes
     }
 
     pub fn to_rgb(self) -> Rgb {
@@ -1340,7 +1393,12 @@ impl Color {
             Self::Cmyk(c) => Rgb::from_color(c.to_rgba()),
             Self::Hsl(c) => Rgb::from_color(c),
             Self::Hsv(c) => Rgb::from_color(c),
+<<<<<<< Updated upstream
         }
+=======
+            Self::Meta => Rgb::from_color(Luma::new(0.0, 1.0)),//TODO: should fail?
+        })
+>>>>>>> Stashed changes
     }
 
     pub fn to_linear_rgb(self) -> LinearRgb {
@@ -1353,7 +1411,12 @@ impl Color {
             Self::Cmyk(c) => LinearRgb::from_color(c.to_rgba()),
             Self::Hsl(c) => Rgb::from_color(c).into_linear(),
             Self::Hsv(c) => Rgb::from_color(c).into_linear(),
+<<<<<<< Updated upstream
         }
+=======
+            Self::Meta => LinearRgb::from_color(Luma::new(0.0, 1.0)),//TODO: should fail?
+        })
+>>>>>>> Stashed changes
     }
 
     pub fn to_cmyk(self) -> Cmyk {
@@ -1366,7 +1429,13 @@ impl Color {
             Self::Cmyk(c) => c,
             Self::Hsl(c) => Cmyk::from_rgba(Rgb::from_color(c)),
             Self::Hsv(c) => Cmyk::from_rgba(Rgb::from_color(c)),
+<<<<<<< Updated upstream
         }
+=======
+            Self::Meta => Cmyk::from_luma(Luma::new(0.0, 1.0)),//TODO: should fail?
+
+        })
+>>>>>>> Stashed changes
     }
 
     pub fn to_hsl(self) -> Hsl {
@@ -1379,7 +1448,12 @@ impl Color {
             Self::Cmyk(c) => Hsl::from_color(c.to_rgba()),
             Self::Hsl(c) => c,
             Self::Hsv(c) => Hsl::from_color(c),
+<<<<<<< Updated upstream
         }
+=======
+            Self::Meta => Hsl::from_color(Luma::new(0.0, 1.0)),//TODO: should fail?
+        })
+>>>>>>> Stashed changes
     }
 
     pub fn to_hsv(self) -> Hsv {
@@ -1392,7 +1466,12 @@ impl Color {
             Self::Cmyk(c) => Hsv::from_color(c.to_rgba()),
             Self::Hsl(c) => Hsv::from_color(c),
             Self::Hsv(c) => c,
+<<<<<<< Updated upstream
         }
+=======
+            Self::Meta => Hsv::from_color(Luma::new(0.0, 1.0)),//TODO: should fail?
+        })
+>>>>>>> Stashed changes
     }
 }
 
@@ -1433,6 +1512,10 @@ impl Debug for Color {
                 v.saturation,
                 v.value,
                 v.alpha
+            ),
+            Self::Meta => write!(
+                f,
+                "Meta",
             ),
         }
     }
@@ -1551,6 +1634,9 @@ impl Repr for Color {
                         Ratio::new(c.alpha.into()).repr(),
                     )
                 }
+            }
+            Self::Meta => {
+                eco_format!("color.meta")
             }
         }
     }

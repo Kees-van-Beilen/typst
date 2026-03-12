@@ -477,6 +477,9 @@ impl SvgDisplay for Color {
                 }
                 f.push_str(")");
             }
+            Color::Meta => {
+                eco_format!("currentColor")
+            }
         }
     }
 }
